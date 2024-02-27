@@ -1,5 +1,9 @@
 # The Methods that improve cyclegan 
 
+## 问题回顾
+
+
+
 
 
 ## 1 Cyclegan +  Attention
@@ -86,14 +90,12 @@ $$
   L_{lsgan}^{s\to t}=(\mathbb{E}_{x\sim X_t}[(D_t(x))^2]+\mathbb{E}_{x\sim X_s}[(1-D_t(G_{s\to t}(x)))^2])
   $$
   
-
 - 循环一致性损失：为了缓解可能存在的**模式坍塌**问题，以及确保进行域迁移前后的图片主体不变。
 
   $$
   L_{cycle}^{s\to t}=\mathbb{E}_{x\sim X_s}[|x-G_{t\to s}(G_{s\to t}(x)))|_1].
   $$
   
-
 - 判别性损失(身份损失)：确保输出图像保持输入图像的身份信息，即当输入图像已经属于目标域时，生成器应该尽可能少地修改它。具体来说，如果将目标域中的图像直接输入到生成器，理想的输出应该是与输入相同。
 
   $$
