@@ -20,7 +20,7 @@
 
 ## 2. cycle consistent + perceptual loss
 
-任务背景是雾化图像的去雾图片生成，文章在原先cyclegan损失的基础上增加了一项`perceptual-consistency`损失：
+**[Cycle Dehaze](https://ar5iv.labs.arxiv.org/html/1805.05308)**的任务背景是雾化图像的去雾图片生成，文章在原先cyclegan损失的基础上增加了一项`perceptual-consistency`损失：
 $$
 \begin{aligned}
 \mathcal{L}_{Perceptual}& =\|\phi(x)-\phi(F(G(x)))\|_{2}^{2}  \\
@@ -35,3 +35,14 @@ $$
 - $G(F(x))$表示**BERT**中提取的$h + r$特征
 
 从不同的维度去学习三元组中的信息，但是有什么道理，还不太明白
+
+
+
+## 3. cyclegan + transformer
+
+[CTrGAN（2023 WACV）](https://openaccess.thecvf.com/content/WACV2023/papers/Mahpod_CTrGAN_Cycle_Transformers_GAN_for_Gait_Transfer_WACV_2023_paper.pdf) ，其任务是人物步态视频目标替换，将视频中行走的人物用新的目标进行替换。将**Transformer**集成到生成器中，在$\mathcal{G}_{s \to t}$生成器中将目标数据的**Key**向量输入到Transformer的Encoder中，同时将源数据的**Query**向量输入到Transformer的Decoder中，用Decoder输出数据进行Fake数据的生成。
+
+![image-20240301195344927](cyclegan attention kgc.assets/image-20240301195344927.png)
+
+ 在后续应用过程中可以直接将源域和目标域数据替换成对应的$h \ r \ t$三元组。
+
