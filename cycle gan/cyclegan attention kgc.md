@@ -2,7 +2,7 @@
 
 
 
-## U-GAT-IT（cyclegan + attention）
+## 1.U-GAT-IT（cyclegan + attention）
 
 原论文对cyclegan中的**环路**改进是通过在生成器中从不同维度提取数据的**feature map**，之后通过一个**classifier（全连接层$\eta_s$）**判断这些**features map**属于当前域的概率，之后用全连接层的权重乘以当前的**feature map**作为最终的**attention**。对于$\eta_s$它应当能够区分是真实数据的特征还是生成数据的特征，从而来训练模型。
 
@@ -16,3 +16,22 @@
 - 判断后按照$f^k_s * W^k_s * p^k_s$的公式进行加权得到推断的尾实体$t$的表示。
 - 从后往前推亦是如此。
 
+
+
+## 2. cycle consistent + perceptual loss
+
+任务背景是雾化图像的去雾图片生成，文章在原先cyclegan损失的基础上增加了一项`perceptual-consistency`损失：
+$$
+\begin{aligned}
+\mathcal{L}_{Perceptual}& =\|\phi(x)-\phi(F(G(x)))\|_{2}^{2}  \\
+&+\|\phi(y)-\phi(G(F(y)))\|_{2}^{2}.
+\end{aligned}
+$$
+其中$\phi(x)$表示从VGG16模型的第二和第五池化层提取的特征，可以将上述损失思路加到kgc的训练链路中:
+
+- $\phi(x)$表示从**BERT**中提取的$h$特征
+- $\phi(y)$表示从**BERT**中提取的$t$特征
+- $F(G(x))$表示**BERT**中提取的$t + r'$特征
+- $G(F(x))$表示**BERT**中提取的$h + r$特征
+
+从不同的维度去学习三元组中的信息，但是有什么道理，还不太明白
