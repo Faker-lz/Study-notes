@@ -46,3 +46,53 @@ $$
 
  在后续应用过程中可以直接将源域和目标域数据替换成对应的$h \ r \ t$三元组。
 
+## 3 Conditional Cyclegan
+
+[Attribute-Guided Face Generation Using Conditional CycleGAN](https://openaccess.thecvf.com/content_ECCV_2018/papers/Yongyi_Lu_Attribute-Guided_Face_Generation_ECCV_2018_paper.pdf)研究使用**条件循环生成对抗网络（Conditional Cyclegan）**，在人脸生成任务中引入了属性指导的概念。
+
+文章提出使用**属性向量$z$**用来表示对应人脸的不同属性，如肤色、发型和瞳色等，特征使用Light-CNN或其他特征提取器产生，模型具体结构如下：![image-20240303164006908](cyclegan attention kgc.assets/image-20240303164006908.png)
+
+模型中的关键点在于为生成器$\mathcal{G}_{Y \to X}$(模糊到清晰)引入了专门度量重构数据$\tilde{X}$和生成数据$\hat{X}$特征差异的**特征验证损失**，从而发挥$z_x$的指导作用。
+
+可以借鉴该模型思路，在$t \to h$过程引入$h +r$的特征向量。
+
+模型的损失与传统Cyclegan模型类似包含以下几个部分：
+
+- 对抗生成损失：
+
+$$
+\begin{aligned}\mathcal{L}(G_{(X,Z)\to Y},D_Y)&=\min_{\Theta_g}\max_{\Theta_d}\big\{\mathbb{E}_{y,z}[\log D_Y(y,z)]\\&+\mathbb{E}_{x,z}[\log(1-D_Y(G_{(X,Z)\to Y}(x,z),z))\big\}\end{aligned}
+$$
+
+
+
+- 生成器损失：
+  $$
+  \rho_{f}\leftarrow D_{Y}(\hat{y}) \\
+  
+  s_f\leftarrow D_X(\hat{y},z) \\
+  
+  \mathcal{L}_{G_{X\rightarrow Y}}\leftarrow\operatorname{log}(\rho_{f})+\mathcal{L}_{c} \\
+  
+  \mathcal{L}_{G_{Y\rightarrow X}}\leftarrow\operatorname{log}(s_{f})+\mathcal{L}_{c}
+  $$
+  
+
+- 循环一致性损失：
+  $$
+  \mathcal{L}_c=\lambda_1\|\tilde{x}-x\|_1+\lambda_2\|\tilde{y}-y\|_1 \\
+  \begin{aligned}
+  &\hat{y} = G_{X\rightarrow Y}(x)\\
+  &\tilde{x} = G_{Y\rightarrow X}(\hat{y},z) \\
+  &\hat{x} = G_{Y\rightarrow X}(y,z) \\
+  &\tilde{y} = G_{X\rightarrow Y}(\hat{x})
+  \end{aligned}
+  $$
+  
+
+- 特征验证损失：
+
+$$
+\mathcal{L}_v = \phi(D_{aux}(x) - D_{aux}(\hat{x}))
+$$
+
