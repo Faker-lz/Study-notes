@@ -120,6 +120,7 @@ for i_episode in range(num_episodes):
     state = env.reset()
     state = torch.tensor([state], dtype=torch.float)
     for t in range(1000):  # Don't infinite loop while learning
+        env.render()
         action = select_action(state)
         next_state, reward, done, _ = env.step(action.item())
         reward = torch.tensor([reward], dtype=torch.float)
