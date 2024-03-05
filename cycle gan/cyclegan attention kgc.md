@@ -27,7 +27,7 @@ $$
 &+\|\phi(y)-\phi(G(F(y)))\|_{2}^{2}.
 \end{aligned}
 $$
-其中$\phi(x)$表示从VGG16模型的第二和第五池化层提取的特征，**其本质上就是数据提取特征的循环一致性损失**，可以将上述损失思路加到kgc的训练链路中:
+其中$\phi(x)$表示从VGG16模型(**CNN**)的第二和第五池化层提取的特征，**其本质上就是数据提取特征的循环一致性损失**，可以将上述损失思路加到kgc的训练链路中:
 
 - $\phi(x)$表示从**BERT**中提取的$h$特征
 - $\phi(y)$表示从**BERT**中提取的$t$特征
@@ -40,7 +40,7 @@ $$
 
 ## 3. cyclegan + transformer
 
-[CTrGAN（2023 WACV）](https://openaccess.thecvf.com/content/WACV2023/papers/Mahpod_CTrGAN_Cycle_Transformers_GAN_for_Gait_Transfer_WACV_2023_paper.pdf) ，其任务是人物步态视频目标替换，将视频中行走的人物用新的目标进行替换。将**Transformer**集成到生成器中，在$\mathcal{G}_{s \to t}$生成器中将目标数据的**Key**向量输入到Transformer的Encoder中，同时将源数据的**Query**向量输入到Transformer的Decoder中，用Decoder输出数据进行Fake数据的生成。
+[CTrGAN（2023 WACV）](https://openaccess.thecvf.com/content/WACV2023/papers/Mahpod_CTrGAN_Cycle_Transformers_GAN_for_Gait_Transfer_WACV_2023_paper.pdf) ，其任务是人物步态视频目标替换，将视频中行走的人物用新的目标进行替换。将**Transformer**集成到生成器中，在$\mathcal{G}_{s \to t}$生成器中将目标数据的**Key(使用VGG16提取)**向量输入到Transformer的Encoder中，同时将源数据的**Query**向量输入到Transformer的Decoder中，用Decoder输出数据进行Fake数据的生成。
 
 ![image-20240301195344927](cyclegan attention kgc.assets/image-20240301195344927.png)
 
@@ -94,7 +94,7 @@ $$
 \mathcal{L}_v = \phi(D_{aux}(x) - D_{aux}(\hat{x}))
 $$
 
-## cyclegan+ rl
+## 5.cyclegan+ rl
 
 [RL-CycleGAN: Reinforcement Learning Aware Simulation-To-Real(2020 CVPR)](https://openaccess.thecvf.com/content_CVPR_2020/html/Rao_RL-CycleGAN_Reinforcement_Learning_Aware_Simulation-to-Real_CVPR_2020_paper.html)，利用RL和Cyclegan结合来解决模拟到现实(sim-to-real)转移的问题。其核心思想是通过Cyclegan学习模拟世界到现实世界的相互映射，在学习过程中使用**强化学习方法规范对应转化过程中场景的一致性**（主要体现为不能丢失物体）。
 
@@ -124,7 +124,6 @@ $$
   d(Q(s,a),r+\gamma V(s'))
   $$
   
-
 - RL scene loss: 场景一致性损失，**评估模拟环境与真实环境之间在视觉场景呈现方面的差异**，并试图最小化这些差异。这种损失可能侧重于确保模拟生成的场景在视觉上与真实世界场景尽可能相似，从而让在模拟环境中训练的RL智能体能够更好地泛化到真实世界环境。
   $$
   \begin{aligned}\mathcal{L}_{RL-scene}(G,F)&=d(q_x,q_x')+d(q_x,q_x'')+d(q_x',q_x'')\\&+d(q_y,q_y')+d(q_y,q_y'')+d(q_y',q_y'')\end{aligned}
