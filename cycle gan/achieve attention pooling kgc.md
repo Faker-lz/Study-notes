@@ -15,9 +15,9 @@ attention pooling函数**具体细节:**
 
 - 根据mask获取到对应的有效token长度，$H$和$T$，裁剪对应的编码矩阵到相应的长度(为了方便后续计算这里仍保留矩阵的大小不变，对mask为0的token的embedding赋值为0)，即近似得到$V_{hr}(B * H * D)$和$V_t(B * T * D)$
 - 对$V_t$向量的第二和第三维进行转置，得到$V_t^T(B * D * T)$
-- 对$V_{hr}(B * L *D)$和$V_t^T(B * D * T)$进行批量矩阵相乘(bmm)，得到注意力矩阵$V_{a}(B * L * T)$
-- 分别对$V_a$的第三和第二维度加和，得到注意力的和矩阵$V_a^{hr}(B * L)$和$V_a^t(B * E)$，之后对这两个矩阵第二维度进行$softmax$操作，得到最终的注意力权重矩阵$V_{attention}^{hr}(B * L)$和$V_{attention}^t(B * E)$
-- 利用扩散机制对$V_{hr}(B * L * D)$和$V_{attention}^{hr}(B * L * (扩散到D))$进行元素相乘，得到计算的中间结果矩阵$V_{temp}(B * L *D)$，这样每个token的所有维度的embedding都乘上了相关的系数，最后沿着第二维度进行加和，对于$V_t(B * E * D)$和$V_{attention}^t(B * E)$进行类似的计算，得到最终的attention pooling向量$V_{hr}(B * D)'$和$V_t'(B * D)$
+- 对$V_{hr}(B * H *D)$和$V_t^T(B * D * T)$进行批量矩阵相乘(bmm)，得到注意力矩阵$V_{a}(B * H * T)$
+- 分别对$V_a$的第三和第二维度加和，得到注意力的和矩阵$V_a^{hr}(B * H)$和$V_a^t(B * T)$，之后对这两个矩阵第二维度进行$softmax$操作，得到最终的注意力权重矩阵$V_{attention}^{hr}(B * H)$和$V_{attention}^t(B * T)$
+- 利用**广播**机制对$V_{hr}(B * L * D)$和$V_{attention}^{hr}(B * L * (扩散到D))$进行元素相乘，得到计算的中间结果矩阵$V_{temp}(B * L *D)$，这样每个token的所有维度的embedding都乘上了相关的系数，最后沿着第二维度进行加和，对于$V_t(B * E * D)$和$V_{attention}^t(B * E)$进行类似的计算，得到最终的attention pooling向量$V_{hr}(B * D)'$和$V_t'(B * D)$
 
 attention pooling 函数代码实现:
 
@@ -54,3 +54,14 @@ def _pool_output(hr_output: torch.Tensor,
 
 
 
+> 有个小问题，按照T和E维度相加后，得到的D维度数据不同特征之间差异貌似不大
+>
+> 全量的attention Q K V
+
+
+
+TODO list
+
+- 加到simkgc上练一波
+
+- 用之前练好的simkgc 输出取前十 然后拿这前十个进行预测 看看效果会不会更好
