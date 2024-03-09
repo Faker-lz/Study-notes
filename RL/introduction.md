@@ -83,8 +83,12 @@ $$
       ![image-20240308112040942](introduction.assets/image-20240308112040942.png)
 
       比如上面的情况，a只出现了一次出现的概率为$1/4$，它的Reward显然比b高，但是由于只在整个采样过程中出现一次，所以如果不采用log值计算更新参数后在出现相同的情况下更倾向与选择b。因为$\nabla log(P(a_n^{t-1}|s^{t-1}_n, \theta)) = \frac{\nabla P(a^{t-1}_n|s^{t-1}_n, \theta)}{P(a^{t-1}_n|s^{t-1}_n, \theta)}$,所以就相当于除去了对应概率的影响。
+    
+    此外，如果所有的Reward都是正值，那么应该设计一个baseline，$\bar{R_{\theta}} = \sum_{\tau}{(R(\tau) - b) \ P(\tau|\theta)}$，使得高于baseline的episode整体Reward为正，其余为负，这样来更好地训练模型。
+    
+    >梯度的解释
 
-反向传播
+
 
 ## 训练方法
 
