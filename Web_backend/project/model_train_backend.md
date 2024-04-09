@@ -53,3 +53,56 @@ async def predict(x: float):
     result = ml_models["answer_to_everything"](x)
     return {"result": result}
 ```
+
+上下文管理器的运行逻辑如下面代码所示:
+```python
+try:
+    lifespan(app)
+    ml_models["answer_to_everything"] = fake_answer_to_everything_ml_model
+    result = ml_models["answer_to_everything"](x)
+    return {"result": result}
+finally:
+    ml_models.clear() 
+```
+实验验证如下：
+```python
+from contextlib import asynccontextmanager
+import asyncio
+
+def fake_answer_to_everything_ml_model(x: float):
+    return x * 42
+
+ml_models = {}
+
+@asynccontextmanager
+async def lifespan():
+    ml_models["answer_to_everything"] = fake_answer_to_everything_ml_model
+    print("load")
+    yield
+    ml_models.clear()
+    print("unload")
+
+async def predict(x: float):
+    result = ml_models["answer_to_everything"](x)
+    return {"result": result}
+
+async def main(data):
+    print(f"model before contextmanager {ml_models}")
+    async with lifespan() as lf:
+        print(await predict(data))
+        print(f"model in contextmanager {ml_models}")
+    print(f"model after contextmanager {ml_models}")
+
+if __name__ == "__main__":
+    asyncio.run(main(10))
+
+```
+上述代码的输出内容为,与手动实现的`try...finally`资源管理过程结果相同:
+```python
+model before contextmanager {}
+load
+{'result': 420}
+model in contextmanager {'answer_to_everything': <function fake_answer_to_everything_ml_model at 0x000001F2B15699D8>}
+unload
+model after contextmanager {}
+```
