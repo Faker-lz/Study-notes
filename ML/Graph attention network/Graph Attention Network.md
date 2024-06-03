@@ -20,3 +20,4 @@
     $$\vec{h}_i'=\sigma\left(\frac{1}{K}\sum_{k=1}^K\sum_{j\in\mathcal{N}_i}\alpha_{ij}^k\mathbf{W}^k\vec{h}_j\right)$$
 
 ## 代码实现
+见模型文件`graphAttentionNetwork.py`
