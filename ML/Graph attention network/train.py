@@ -37,7 +37,7 @@ class KnowledgeGraphTrainer:
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True)
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=batch_size, shuffle=True)
         # TODO 稀疏邻接矩阵
-        self.adj_matrix = build_adjacency_matrix(self.train_dataset.triples, self.train_dataset.entity2id)
+        self.adj_matrix = build_adjacency_matrix(self.train_dataset.triples, self.train_dataset.entity2id).to(device)
         
         self.n_entities = len(all_entity2id)
         self.n_relations = len(all_relation2id)
