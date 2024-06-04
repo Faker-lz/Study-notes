@@ -55,7 +55,7 @@ def load_data(filepath, load_all=False):
         return triples
 
 def build_adjacency_matrix(triples, entity2id):
-    n_entities = len(entity2id)
+    n_entities = max(entity2id.values()) + 1
     adj_matrix = np.zeros((n_entities, n_entities))
 
     for head, _, tail in triples:
