@@ -1,3 +1,8 @@
+'''
+Author: WLZ
+Date: 2024-06-03 21:11:37
+Description: 
+'''
 import torch
 import torch.nn as nn
 from torch import optim
@@ -7,8 +12,11 @@ from dataset import KnowledgeGraphDataset, load_data, build_adjacency_matrix
 
 
 class KnowledgeGraphTrainer:
-    def __init__(self, filepath, entity_dim, relation_dim, dropout, alpha, nheads, batch_size=32, lr=0.01, num_epochs=10):
-        self.filepath = filepath
+    def __init__(self, all_file_path, train_file_path, valid_file_path, entity_dim, relation_dim, dropout, 
+                 alpha, nheads, batch_size=32, lr=0.01, num_epochs=10):
+        self.all_file_path = all_file_path
+        self.train_file_path = train_file_path
+        self.valid_file_path = valid_file_path
         self.entity_dim = entity_dim
         self.relation_dim = relation_dim
         self.dropout = dropout
@@ -16,12 +24,14 @@ class KnowledgeGraphTrainer:
         self.nheads = nheads
         self.batch_size = batch_size
         self.lr = lr
-        self.num_epochs = num_epochs
-        
-        self.triples, self.entity2id, self.relation2id = load_data(filepath)
-        self.dataset = KnowledgeGraphDataset(self.triples, self.entity2id, self.relation2id)
-        self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=True)
-        self.adj_matrix = build_adjacency_matrix(self.triples, self.entity2id)
+        self.num_epochs = num_epochs    
+
+        all_entity2id, all_relation2id = load_data(all_file_path, True)
+        self.train_dataset = KnowledgeGraphDataset(train_file_path, all_entity2id, all_relation2id)
+        self.valid_dataset = KnowledgeGraphDataset(valid_file_path, all_entity2id, all_relation2id)
+        self.train_dataloader = DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True)
+        self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=batch_size, shuffle=True)
+        self.adj_matrix = build_adjacency_matrix(self.train_dataset.triples, self.train_dataset.entity2id)
         
         self.n_entities = len(self.entity2id)
         
