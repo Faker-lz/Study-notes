@@ -36,8 +36,6 @@ class KnowledgeGraphTrainer:
         self.valid_dataset = KnowledgeGraphDataset(valid_file_path, all_entity2id, all_relation2id)
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True)
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=batch_size, shuffle=True)
-        # TODO 稀疏邻接矩阵
-        self.adj_matrix = build_adjacency_matrix(self.train_dataset.triples, self.train_dataset.entity2id).to(device)
         
         self.n_entities = len(all_entity2id)
         self.n_relations = len(all_relation2id)
@@ -57,15 +55,16 @@ class KnowledgeGraphTrainer:
         self.model.train()
         for epoch in range(self.num_epochs):
             total_loss = 0
-            for batch_index, batch_data in enumerate(self.train_dataloader):
+            for batch_index, (edge_index, triples) in enumerate(self.train_dataloader):
                 if self.device == 'cuda':
-                    move_to_cuda(batch_data)
-                head, relation, tail = batch_data
-                head = head.to(torch.long)
-                relation = relation.to(torch.long)
-                tail = tail.to(torch.long)
-                batch_size = tail.shape[0]
-
+                    move_to_cuda(edge_index)
+                    move_to_cuda(triples)
+                
+                head, relation, tail = zip(*triples)
+                head = torch.tensor(head, dtype=torch.long)
+                relation = torch.tensor(relation, dtype=torch.long)
+                tail = torch.tensor(tail, dtype=torch.long)
+                triples_number = head.shape[0]
 
                 self.optimizer.zero_grad()
 
@@ -79,7 +78,7 @@ class KnowledgeGraphTrainer:
                 hr = torch.cat([head_emb, relation_emb], dim=1)
 
                 logits = hr @ tail_emb
-                target = torch.arange(batch_size)
+                target = torch.arange(triples_number).to(self.device)
 
                 loss = self.criterion(logits, target)
                 acc1, acc3 , acc10 = compute_accuracy(logits, target, topk=(1, 3, 10))
@@ -98,15 +97,15 @@ class KnowledgeGraphTrainer:
         acc1s = 0
         acc3s = 0
         acc10s = 0
-        for _, batch_data in enumerate(self.valid_dataloader):
+        for _, (edge_index, triples) in enumerate(self.valid_dataloader):
             if self.device == 'cuda':
-                move_to_cuda(batch_data)
-            head, relation, tail = batch_data
-            head = head.to(torch.long)
-            relation = relation.to(torch.long)
-            tail = tail.to(torch.long)
-            batch_size = tail.shape[0]
-
+                move_to_cuda(edge_index)
+                move_to_cuda(triples)
+            head, relation, tail = zip(*triples)
+            head = torch.tensor(head, dtype=torch.long)
+            relation = torch.tensor(relation, dtype=torch.long)
+            tail = torch.tensor(tail, dtype=torch.long)
+            triples_number = head.shape[0]
 
             self.optimizer.zero_grad()
 
@@ -120,7 +119,7 @@ class KnowledgeGraphTrainer:
             hr = torch.cat([head_emb, relation_emb], dim=1)
 
             logits = hr @ tail_emb
-            target = torch.arange(batch_size)
+            target = torch.arange(triples_number).to(self.device)
 
             loss = self.criterion(logits, target)
             acc1, acc3 , acc10 = compute_accuracy(logits, target, topk=(1, 3, 10))

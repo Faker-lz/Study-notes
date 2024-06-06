@@ -10,25 +10,20 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class KnowledgeGraphDataset(Dataset):
-    def __init__(self, filepath, all_entity2id, all_relation2id):
-        self.triples = load_data(filepath)
-        self.entity2id = self._get_entity_id(all_entity2id)
-        self.relation2id = all_relation2id
-    
-    def _get_entity_id(self, all_entity2id):
-        entity_set = set()
-        for head, _ , tail in self.triples:
-            entity_set.add(head)
-            entity_set.add(tail)
-        entity2id = {entity: all_entity2id[entity] for entity in entity_set}
-        return entity2id
+    def __init__(self, graph_part_dir, entity2id, relation2id):
+            self.graph_part_dir = graph_part_dir
+            self.graph_part_files = [os.path.join(graph_part_dir, f) for f in os.listdir(graph_part_dir) if f.endswith('.txt')]
+            self.entity2id = entity2id
+            self.relation2id = relation2id
 
     def __len__(self):
-        return len(self.triples)
+        return len(self.graph_part_files)
 
     def __getitem__(self, idx):
-        head, relation, tail = self.triples[idx]
-        return self.entity2id[head], self.relation2id[relation], self.entity2id[tail]
+        part_file = self.graph_part_files[idx]
+        triples, _, _ = load_data(part_file, entity2id=self.entity2id, relation2id=self.relation2id)
+        edge_index = build_edge_index(triples, self.entity2id)
+        return edge_index, triples
 
 def load_data(filepath, load_all=False):
     entity_set = set()
@@ -54,22 +49,25 @@ def load_data(filepath, load_all=False):
                 triples.append((head, relation, tail))
         return triples
 
-def build_adjacency_matrix(triples, entity2id):
-    n_entities = max(entity2id.values()) + 1
-    adj_matrix = np.zeros((n_entities, n_entities))
-
-    for head, _, tail in triples:
+def build_edge_index(triples, entity2id):
+    """
+    构建PyTorch Geometric格式的边索引
+    :param triples: 知识图谱三元组列表，每个三元组是(head, relation, tail)
+    :param entity2id: 实体到ID的映射字典
+    :return: PyTorch Geometric格式的边索引
+    """
+    edges = []
+    for head, relation, tail in triples:
         head_id = entity2id[head]
         tail_id = entity2id[tail]
-        adj_matrix[head_id, tail_id] = 1
-
-    adj_matrix = torch.tensor(adj_matrix, dtype=torch.float)
-    return adj_matrix
-
+        edges.append([head_id, tail_id])
+    
+    edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+    return edge_index
 
 if __name__ == '__main__':
     triples, entity2id, relation2id = load_data(os.path.join(os.path.dirname(__file__) ,r'data\WN18RR\train.txt'))
-    adj_matrix = build_adjacency_matrix(triples, entity2id, relation2id)
+    adj_matrix = build_edge_index(triples, entity2id, relation2id)
     dataset = KnowledgeGraphDataset(triples, entity2id, relation2id)
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     for data in dataloader:
