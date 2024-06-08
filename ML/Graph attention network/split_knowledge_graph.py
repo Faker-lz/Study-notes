@@ -23,9 +23,14 @@ def save_graph_parts(graph_parts, output_dir):
                 f.write('\t'.join(triple) + '\n')
 
 def split_and_save_knowledge_graph(input_file, output_dir, num_parts):
-    triples, _, _ = load_data(input_file)
+    input_file = os.path.join(os.path.dirname(__file__), input_file)
+    output_dir = os.path.join(os.path.dirname(__file__), output_dir + f'_{num_parts}')
+
+    triples, _, _ = load_data(input_file, True)
     graph_parts = split_knowledge_graph(triples, num_parts)
     save_graph_parts(graph_parts, output_dir)
 
 if __name__ == '__main__':
-    split_and_save_knowledge_graph('all_knowledge_graph.txt', 'graph_parts', num_parts=10)
+    split_and_save_knowledge_graph(r'data\WN18RR\train.txt', r'data\WN18RR\train_graph_parts', num_parts=50)
+    split_and_save_knowledge_graph(r'data\WN18RR\valid.txt', r'data\WN18RR\valid_graph_parts', num_parts=3)
+
